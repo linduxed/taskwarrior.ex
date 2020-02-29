@@ -1,4 +1,21 @@
 defmodule Taskwarrior.Task do
+  @moduledoc """
+  A representation of a Taskwarrior task
+
+  The struct field names are, to the degree that it's possible, following the
+  names of the fields that are found in JSON exports from Taskwarrior's `task
+  export`.
+
+  Notes about the structs:
+
+  * Some fields are not always set. Examples would be a task having no project,
+    or `end` not being set due to the task not having the `status` of
+    `completed`. In these cases, the value will be set to `nil`.
+  * The `Taskwarrior.Task` structs do not have all of the fields that
+    Taskwarrior tasks can possibly have. This is primarily due to functionality
+    not being implemented yet.
+  """
+
   defstruct [
     :id,
     :uuid,
