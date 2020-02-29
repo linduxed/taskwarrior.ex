@@ -1,18 +1,12 @@
 defmodule Taskwarrior do
   @moduledoc """
-  Documentation for Taskwarrior.
+  Parses Taskwarrior data
   """
 
   @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Taskwarrior.hello()
-      :world
-
+  Parses JSON data and returns Taskwarrior tasks
   """
-  def hello do
-    :world
+  def from_json(json_data) do
+    Jason.decode(json_data)
   end
 end
