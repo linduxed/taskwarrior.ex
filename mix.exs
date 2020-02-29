@@ -40,6 +40,7 @@ defmodule Taskwarrior.MixProject do
 
   defp deps do
     [
+      {:credo, "~> 1.2", only: [:dev, :test], runtime: false},
       {:ex_doc, "~> 0.21", only: :dev, runtime: false},
       {:jason, "~> 1.1"}
     ]
