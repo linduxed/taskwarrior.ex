@@ -31,10 +31,10 @@ defmodule Taskwarrior.Task do
   ]
 
   @doc """
-  Builds a Task struct from a JSON-decoded Taskwarrior task
+  Builds a struct from a JSON-decoded Taskwarrior task
 
-  The `Task` struct created by this function mostly consist of unmodified data
-  from the exported Taskwarrior task.
+  The struct created by this function mostly consist of unmodified data from
+  the exported Taskwarrior task.
 
   **Note:** The dates are parsed as `DateTime` structs with the timezone being
   set to UTC, which is how Taskwarrior stores its time values. Currently there
