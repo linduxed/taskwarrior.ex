@@ -27,6 +27,7 @@ defmodule Taskwarrior.Task do
     :project,
     :status,
     :tags,
+    :udas,
     :urgency
   ]
 
@@ -39,8 +40,31 @@ defmodule Taskwarrior.Task do
   **Note:** The dates are parsed as `DateTime` structs with the timezone being
   set to UTC, which is how Taskwarrior stores its time values. Currently there
   is no way to have the values be converted to an alternative timezone.
+
+  ## User Defined Attributes (UDA)
+
+  The `opts[:udas]` key needs to be populated with an "UDA list". These are the
+  types of elements allowed in the list:
+
+    * `:uda_name` - UDAs of the types `numeric`, `duration`, and `string`.
+      Needs to match the UDA name in the JSON data.
+    * `{:uda_name, :date}` - UDAs of the `date` type need to be parsed,
+      therefore they need to be indicated with this shape.
+
+  ## Examples
+
+      iex> Taskwarrior.Task.build(json_task)
+      %Taskwarrior.Task{...}
+
+      iex> Taskwarrior.Task.build(json_task, udas: [:foobar, :baz])
+      %Taskwarrior.Task{...}
+
+      iex> Taskwarrior.Task.build(json_task, udas: [:foobar, :baz, quux: :date])
+      %Taskwarrior.Task{...}
   """
-  def build(task) do
+  def build(task, opts \\ []) do
+    udas = extract_udas(task, opts[:udas])
+
     %__MODULE__{
       id: task["id"],
       uuid: task["uuid"],
@@ -52,8 +76,41 @@ defmodule Taskwarrior.Task do
       project: task["project"],
       status: task["status"],
       tags: task["tags"] || [],
+      udas: udas,
       urgency: task["urgency"]
     }
+  end
+
+  defp extract_udas(_task, nil), do: %{}
+
+  # UDAs in Taskwarrior can have four different types:
+  # `numeric`, `date`, `duration`, and `string`.
+  #
+  # When `task export` is invoked, Taskwarrior will ensure that the `numeric`
+  # UDAs in the exported JSON will be represented as numbers, while `string`
+  # and `duration` UDAs are simply exported as strings. All of these values can
+  # be extracted directly from the parsed JSON without modification.
+  #
+  # This means that the only UDA type that needs some kind of parsing is
+  # `date`, which is why the `date` UDAs need to have their type indicated.
+  #
+  # If support for parsing `duration` strings would be added, then `duration`
+  # UDAs will likely also need to have their type indicated.
+  defp extract_udas(task, udas) do
+    Enum.reduce(udas, %{}, fn uda, acc ->
+      {uda_name, parser} =
+        case uda do
+          uda_name when is_atom(uda_name) -> {uda_name, & &1}
+          {uda_name, :date} when is_atom(uda_name) -> {uda_name, &parse_iso_date/1}
+        end
+
+      uda_value =
+        task
+        |> Map.get(Atom.to_string(uda_name))
+        |> parser.()
+
+      Map.put(acc, uda_name, uda_value)
+    end)
   end
 
   defp parse_iso_date(nil), do: nil

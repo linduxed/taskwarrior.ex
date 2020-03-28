@@ -1,7 +1,7 @@
 defmodule TaskwarriorTest do
   use ExUnit.Case
 
-  describe "from_json/1" do
+  describe "from_json/2" do
     test "returns an empty list if JSON is empty list" do
       json_data = "[]\n"
 
@@ -57,6 +57,7 @@ defmodule TaskwarriorTest do
                project: "personal",
                status: "pending",
                tags: ["contact"],
+               udas: %{},
                urgency: 13.8052
              }
 
@@ -70,6 +71,63 @@ defmodule TaskwarriorTest do
                project: "work",
                status: "completed",
                tags: ["programming", "foobar_client"],
+               udas: %{},
+               urgency: 1.9
+             }
+    end
+
+    test "returns a list of Task items, even for Taskwarrior JSON with UDAs" do
+      json_data = """
+      [
+        {
+          "id": 0,
+          "description": "A completed task",
+          "end": "20200229T193756Z",
+          "entry": "20200228T173215Z",
+          "modified": "20200229T193756Z",
+          "project": "work",
+          "status": "completed",
+          "tags": [
+            "programming",
+            "foobar_client"
+          ],
+          "uuid": "9b3752e3-d34f-401f-bec3-47ba6549426a",
+          "urgency": 1.9,
+          "uda_date": "20200320T193756Z",
+          "uda_duration": "weekly",
+          "uda_numeric": 123.4,
+          "uda_string": "foobar"
+        }
+      ]
+      """
+
+      assert [task_with_udas] =
+               Taskwarrior.from_json(
+                 json_data,
+                 udas: [
+                   :uda_duration,
+                   :uda_numeric,
+                   :uda_string,
+                   uda_date: :date
+                 ]
+               )
+
+      assert task_with_udas == %Taskwarrior.Task{
+               id: 0,
+               uuid: "9b3752e3-d34f-401f-bec3-47ba6549426a",
+               description: "A completed task",
+               end: ~U[2020-02-29 19:37:56Z],
+               entry: ~U[2020-02-28 17:32:15Z],
+               modified: ~U[2020-02-29 19:37:56Z],
+               project: "work",
+               status: "completed",
+               tags: ["programming", "foobar_client"],
+               udas: %{
+                 uda_date: ~U[2020-03-20 19:37:56Z],
+                 uda_duration: "weekly",
+                 uda_numeric: 123.4,
+                 uda_string: "foobar"
+               },
                urgency: 1.9
              }
     end
