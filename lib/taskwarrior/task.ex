@@ -85,6 +85,25 @@ defmodule Taskwarrior.Task do
     }
   end
 
+  def to_json(%__MODULE__{} = task) do
+    %{
+      id: task.id,
+      uuid: task.uuid,
+      description: task.description,
+      depends: task.depends,
+      due: date_to_basic_iso(task.due),
+      end: date_to_basic_iso(task.end),
+      entry: date_to_basic_iso(task.entry),
+      modified: date_to_basic_iso(task.modified),
+      parent: task.parent,
+      project: task.project,
+      status: task.status,
+      tags: task["tags"] || [],
+      udas: udas,
+      urgency: task["urgency"]
+    }
+  end
+
   defp extract_udas(_task, nil), do: %{}
 
   # UDAs in Taskwarrior can have four different types:

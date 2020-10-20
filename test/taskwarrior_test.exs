@@ -1,6 +1,51 @@
 defmodule TaskwarriorTest do
   use ExUnit.Case
 
+  describe "Circular conversion" do
+    test "from_json followed by to_json results in the same data" do
+      json_data = """
+      [
+        {
+          "id": 123,
+          "description": "An uncompleted task",
+          "depends": "371c8655-45b5-4b02-9a7b-bc41d0241d4b",
+          "due": "20200223T225214Z",
+          "entry": "20191124T124932Z",
+          "imask": 1,
+          "modified": "20191210T193308Z",
+          "parent": "00f371df-f5b5-44df-98e8-dcc0262d4f07",
+          "project": "personal",
+          "recur": "quarterly",
+          "status": "pending",
+          "tags": ["contact"],
+          "uuid": "5c67dfa3-98de-4fc4-9cec-648175d3a87b",
+          "urgency": 13.8052
+        },
+        {
+          "id": 0,
+          "description": "A completed task",
+          "end": "20200229T193756Z",
+          "entry": "20200228T173215Z",
+          "modified": "20200229T193756Z",
+          "project": "work",
+          "status": "completed",
+          "tags": [
+            "programming",
+            "foobar_client"
+          ],
+          "uuid": "9b3752e3-d34f-401f-bec3-47ba6549426a",
+          "urgency": 1.9
+        }
+      ]
+      """
+
+      assert json_data ==
+               json_data
+               |> Taskwarrior.from_json()
+               |> Taskwarrior.to_json()
+    end
+  end
+
   describe "from_json/2" do
     test "returns an empty list if JSON is empty list" do
       json_data = "[]\n"
