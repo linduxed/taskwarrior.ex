@@ -48,6 +48,6 @@ defmodule Taskwarrior do
   def to_json(todos) do
     todos
     |> Enum.map(&Task.to_json(&1))
-    |> Enum.join("\n")
+    |> Jason.encode!()
   end
 end

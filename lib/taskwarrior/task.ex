@@ -98,9 +98,9 @@ defmodule Taskwarrior.Task do
       parent: task.parent,
       project: task.project,
       status: task.status,
-      tags: task["tags"] || [],
-      udas: udas,
-      urgency: task["urgency"]
+      tags: task.tags,
+      # udas: udas,
+      urgency: task.urgency
     }
   end
 
@@ -169,5 +169,30 @@ defmodule Taskwarrior.Task do
       )
 
     DateTime.from_naive!(naive_date_time, "Etc/UTC")
+  end
+
+  defp date_to_basic_iso(nil), do: nil
+
+  defp date_to_basic_iso(%DateTime{
+         year: year,
+         month: month,
+         day: day,
+         hour: hour,
+         minute: minute,
+         second: second
+       }) do
+    [month, day, hour, minute, second] =
+      Enum.map([month, day, hour, minute, second], &pad_with_zero/1)
+
+    "#{year}#{month}#{day}" <>
+      "T" <>
+      "#{hour}#{minute}#{second}" <>
+      "Z"
+  end
+
+  defp pad_with_zero(number) when is_integer(number) do
+    number
+    |> Integer.to_string()
+    |> String.pad_leading(2, "0")
   end
 end
