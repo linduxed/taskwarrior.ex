@@ -197,6 +197,7 @@ defmodule TaskwarriorTest do
           "depends": "371c8655-45b5-4b02-9a7b-bc41d0241d4b",
           "due": "20200223T225214Z",
           "entry": "20191124T124932Z",
+          "foobar": 123,
           "imask": 1,
           "modified": "20191210T193308Z",
           "parent": "00f371df-f5b5-44df-98e8-dcc0262d4f07",
@@ -209,6 +210,7 @@ defmodule TaskwarriorTest do
         },
         {
           "id": 0,
+          "quux": 123,
           "description": "A completed task",
           "end": "20200229T193756Z",
           "entry": "20200228T173215Z",
@@ -241,6 +243,11 @@ defmodule TaskwarriorTest do
                status: "pending",
                tags: ["contact"],
                udas: %{},
+               unrecognized_fields: %{
+                 "foobar" => 123,
+                 "imask" => 1,
+                 "recur" => "quarterly"
+               },
                urgency: 13.8052
              }
 
@@ -255,6 +262,9 @@ defmodule TaskwarriorTest do
                status: "completed",
                tags: ["programming", "foobar_client"],
                udas: %{},
+               unrecognized_fields: %{
+                 "quux" => 123
+               },
                urgency: 1.9
              }
     end

@@ -16,7 +16,23 @@ defmodule Taskwarrior.Task do
     not being implemented yet.
   """
 
-  defstruct [
+  @json_fields [
+    "id",
+    "uuid",
+    "description",
+    "depends",
+    "due",
+    "end",
+    "entry",
+    "modified",
+    "parent",
+    "project",
+    "status",
+    "tags",
+    "urgency"
+  ]
+
+  @data_fields [
     :id,
     :uuid,
     :description,
@@ -32,6 +48,10 @@ defmodule Taskwarrior.Task do
     :udas,
     :urgency
   ]
+
+  @unrecognized_fields_key :unrecognized_fields
+
+  defstruct @data_fields ++ [{@unrecognized_fields_key, %{}}]
 
   @doc """
   Builds a struct from a JSON-decoded Taskwarrior task
@@ -65,7 +85,8 @@ defmodule Taskwarrior.Task do
       %Taskwarrior.Task{...}
   """
   def build(task, opts \\ []) do
-    udas = extract_udas(task, opts[:udas])
+    udas = extract_json_udas(task, opts[:udas])
+    unrecognized_fields = extract_json_unrecognized_fields(task, opts[:udas])
 
     %__MODULE__{
       id: task["id"],
@@ -81,11 +102,14 @@ defmodule Taskwarrior.Task do
       status: task["status"],
       tags: task["tags"] || [],
       udas: udas,
+      unrecognized_fields: unrecognized_fields,
       urgency: task["urgency"]
     }
   end
 
-  def to_json(%__MODULE__{} = task) do
+  def to_json(%__MODULE__{} = task, opts \\ []) do
+    udas = build_json_udas(task.udas, opts[:udas])
+
     %{
       id: task.id,
       uuid: task.uuid,
@@ -99,12 +123,12 @@ defmodule Taskwarrior.Task do
       project: task.project,
       status: task.status,
       tags: task.tags,
-      # udas: udas,
+      udas: udas,
       urgency: task.urgency
     }
   end
 
-  defp extract_udas(_task, nil), do: %{}
+  defp extract_json_udas(_task, nil), do: %{}
 
   # UDAs in Taskwarrior can have four different types:
   # `numeric`, `date`, `duration`, and `string`.
@@ -119,7 +143,7 @@ defmodule Taskwarrior.Task do
   #
   # If support for parsing `duration` strings would be added, then `duration`
   # UDAs will likely also need to have their type indicated.
-  defp extract_udas(task, udas) do
+  defp extract_json_udas(task, udas) do
     Enum.reduce(udas, %{}, fn uda, acc ->
       {uda_name, parser} =
         case uda do
@@ -134,6 +158,29 @@ defmodule Taskwarrior.Task do
 
       Map.put(acc, uda_name, uda_value)
     end)
+  end
+
+  defp extract_json_unrecognized_fields(task, nil) do
+    task
+    |> Map.drop(@json_fields)
+  end
+
+  defp extract_json_unrecognized_fields(task, udas) do
+    uda_names =
+      udas
+      |> Enum.map(fn
+        {uda_name, _value} -> uda_name
+        uda_name -> uda_name
+      end)
+      |> Enum.map(&Atom.to_string/1)
+
+    task
+    |> Map.drop(@json_fields)
+    |> Map.drop(uda_names)
+  end
+
+  defp build_json_udas(udas, nil) do
+    # XXX: continue here
   end
 
   defp parse_iso_date(nil), do: nil
