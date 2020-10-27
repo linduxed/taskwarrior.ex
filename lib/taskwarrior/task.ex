@@ -107,9 +107,7 @@ defmodule Taskwarrior.Task do
     }
   end
 
-  def to_json(%__MODULE__{} = task, opts \\ []) do
-    udas = build_json_udas(task.udas, opts[:udas])
-
+  def to_json(%__MODULE__{} = task) do
     %{
       id: task.id,
       uuid: task.uuid,
@@ -123,9 +121,9 @@ defmodule Taskwarrior.Task do
       project: task.project,
       status: task.status,
       tags: task.tags,
-      udas: udas,
       urgency: task.urgency
     }
+    |> Map.merge(task.udas)
   end
 
   defp extract_json_udas(_task, nil), do: %{}
@@ -177,10 +175,6 @@ defmodule Taskwarrior.Task do
     task
     |> Map.drop(@json_fields)
     |> Map.drop(uda_names)
-  end
-
-  defp build_json_udas(udas, nil) do
-    # XXX: continue here
   end
 
   defp parse_iso_date(nil), do: nil
