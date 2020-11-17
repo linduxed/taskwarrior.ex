@@ -47,7 +47,7 @@ defmodule Taskwarrior do
 
   def to_json(todos) do
     todos
-    |> Enum.map(&Task.to_json(&1))
+    |> Enum.map(&Task.to_map/1)
     |> Jason.encode!()
   end
 end

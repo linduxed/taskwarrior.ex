@@ -107,7 +107,7 @@ defmodule Taskwarrior.Task do
     }
   end
 
-  def to_json(%__MODULE__{} = task) do
+  def to_map(%__MODULE__{} = task) do
     udas_with_converted_dates =
       task.udas
       |> Enum.map(fn
