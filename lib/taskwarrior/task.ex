@@ -108,6 +108,14 @@ defmodule Taskwarrior.Task do
   end
 
   def to_json(%__MODULE__{} = task) do
+    udas_with_converted_dates =
+      task.udas
+      |> Enum.map(fn
+        {key, %DateTime{} = value} -> {key, date_to_basic_iso(value)}
+        {key, value} -> {key, value}
+      end)
+      |> Enum.into(%{})
+
     %{
       id: task.id,
       uuid: task.uuid,
@@ -123,7 +131,11 @@ defmodule Taskwarrior.Task do
       tags: task.tags,
       urgency: task.urgency
     }
-    |> Map.merge(task.udas)
+    |> Map.merge(udas_with_converted_dates)
+    |> Map.merge(task.unrecognized_fields)
+    |> update_if_present(:imask, &Integer.to_string/1)
+    |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+    |> Enum.into(%{})
   end
 
   defp extract_json_udas(_task, nil), do: %{}
@@ -235,5 +247,13 @@ defmodule Taskwarrior.Task do
     number
     |> Integer.to_string()
     |> String.pad_leading(2, "0")
+  end
+
+  defp update_if_present(data, key, update_fun) when is_map(data) do
+    if Map.has_key?(data, key) do
+      Map.update!(data, key, update_fun)
+    else
+      data
+    end
   end
 end
